@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file: .env
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+    # expose this to localhost port 8001
+      - "8001:8000"
+    env_file: .env
+    depends_on:
+      - db
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=1
+
+volumes:
+  postgres_data:
+  
