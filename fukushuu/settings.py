@@ -40,6 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Our stuff
     'sandbox',
+    'pages',
+    'accounts',
+    'decks'
 ]
 
 MIDDLEWARE = [
