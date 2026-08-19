@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Our stuff
-    'sandbox',
     'pages',
     'accounts',
     'decks'
@@ -126,3 +125,6 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
+# Change the Auth user model into our own custom one(location: accounts.models)
+AUTH_USER_MODEL = 'accounts.User'

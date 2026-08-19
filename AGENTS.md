@@ -1,23 +1,37 @@
 # AGENTS.md
 
 ## Project overview
-This repository is a Django-based flashcard project called Fukushuu. The current implementation is a small starter app focused on:
+This repository is a Django-based flashcard project called Fukushuu. It has
+moved past the initial scaffolding phase: the app structure and core models
+are defined, though views/templates for most features are still stubs. The
+project is focused on:
 - a Django project shell configured for PostgreSQL
-- a sandbox app used to validate Tailwind CSS + Alpine.js behavior
-- a future file-to-flashcard workflow with spaced repetition (SM-2 style logic)
+- a custom user model (`accounts.User`) with email-based identity
+- the core flashcard domain (`decks`: `Tag`, `Deck`, `Card`) with SM-2
+  spaced-repetition fields on `Card`
+- admin-managed landing page content (`pages.LandingPage`, a singleton)
+- Tailwind CSS + Alpine.js for the frontend, verified during the earlier
+  scaffolding phase via a now-removed `sandbox` app
 
-This project is currently in an early setup phase, not a full production-ready app yet.
+This project is still pre-production: migrations for `accounts`, `decks`,
+and `pages` have been generated and applied to the local dev database, and
+an initial superuser exists. Views are largely route stubs, templates are
+minimal or absent, and no models are yet registered in any `admin.py`.
 
 ## Repository structure
 - `manage.py` — Django entry point
-- `fukushuu/` — project package
-  - `settings.py` — global Django settings and PostgreSQL config
-  - `urls.py` — project URL routing
+- `fukushuu/` — project package (config only, not an app)
+  - `settings.py` — global Django settings, PostgreSQL config, `AUTH_USER_MODEL`
+  - `urls.py` — project URL routing, `include()`s each app's `urls.py`
   - `asgi.py`, `wsgi.py` — ASGI/WSGI app bootstraps
-- `sandbox/` — disposable development app for testing UI/tooling
-  - `views.py` — app views
-  - `urls.py` — app routes
-  - `templates/sandbox/test.html` — minimal Tailwind/Alpine test page
+- `accounts/` — custom user identity and preferences
+  - `models.py` — `User` (extends `AbstractUser`), `Setting`
+  - `views.py`, `urls.py` — auth-related routes (currently stubs)
+- `decks/` — the core flashcard domain
+  - `models.py` — `Tag`, `Deck`, `Card`
+  - `views.py`, `urls.py` — deck/card CRUD and review routes (currently stubs)
+- `pages/` — admin-managed static content
+  - `models.py` — `LandingPage` (singleton pattern via `save()` override)
 - `static/` — frontend static assets
   - `css/input.css` and `css/output.css` — Tailwind input/output
   - `js/alpine.min.js` — Alpine.js runtime
@@ -29,9 +43,14 @@ This project is currently in an early setup phase, not a full production-ready a
 - `.env.example` — sample environment file
 - `.env` — local environment values (not committed)
 
+**Note:** `sandbox/`, previously used to validate Tailwind/Alpine wiring, has
+been removed now that real apps exist. If you encounter it on an older
+branch, see the "Removing sandbox" steps in `README.md` before assuming it's
+still part of `INSTALLED_APPS`.
+
 ## Tech stack
 - Python 3.12
-- Django 5+
+- Django 6.0
 - PostgreSQL 16
 - Tailwind CSS via standalone CLI
 - Alpine.js
@@ -49,18 +68,22 @@ docker compose exec web python manage.py migrate
 docker compose exec web python manage.py createsuperuser
 ```
 
+`createsuperuser` will prompt for `username`, `email`, `password` — `email`
+is required and unique on the custom `User` model, so don't skip it.
+
 ### Day-to-day workflow
 ```bash
 docker compose up
 make tailwind-watch
 ```
 
-Run Tailwind in a separate terminal because it watches files continuously. The app is served at:
+Run Tailwind in a separate terminal because it watches files continuously.
+The app is served at:
 - http://127.0.0.1:8001/
 - admin: http://127.0.0.1:8001/admin/
 
-The sandbox page is available at:
-- http://127.0.0.1:8001/sandbox/
+Use `127.0.0.1`, not `localhost` — this project has a known IPv6/IPv4
+resolution quirk on `localhost` in local dev.
 
 ## Important environment configuration
 The app reads settings from `.env` via `python-decouple`.
@@ -79,31 +102,66 @@ Current project config expects Postgres at host `db` on port `5432` in Docker.
 ## Django settings and app conventions
 Key configuration facts:
 - `fukushuu/settings.py` uses PostgreSQL, not SQLite
-- `INSTALLED_APPS` currently includes `django.contrib.*` plus the `sandbox` app
+- `AUTH_USER_MODEL = 'accounts.User'` — **must** stay set; this was
+  configured before the first `migrate` and should never be changed on an
+  existing database without a deliberate, careful migration
+- `INSTALLED_APPS` includes `django.contrib.*` plus the project apps:
+  `pages`, `accounts`, `decks`
 - `ROOT_URLCONF` points to `fukushuu.urls`
 - `STATIC_URL` is `static/`
 - `STATICFILES_DIRS` includes the project-level `static/` folder
 - `ALLOWED_HOSTS` is left empty; this is a local-development setup
 
-URL structure:
-- project URL root includes `admin/`
-- project URL root also includes `sandbox/` via `sandbox.urls`
+## App structure and model ownership
+Apps are split by domain/feature (vertical slices), not by technical layer.
+Before adding a new model, check whether it belongs in an existing app
+first — a new app is only warranted when the data has no relational or
+lifecycle overlap with an existing app's models.
+
+### `accounts`
+- `User(AbstractUser)` — drops `first_name`/`last_name`; `email` is
+  overridden to be unique. No custom `role` field — roles are handled via
+  built-in `is_staff` (admin panel access) and `is_superuser` (full bypass).
+  `is_active` (inherited) is used as the soft-archive flag; a separate
+  `archived` field was deliberately not added to avoid two flags disagreeing
+  with each other. `suspended` / `suspended_until` are informational only —
+  they do **not** block login automatically; check `is_currently_suspended`
+  wherever suspension needs to be enforced.
+- `Setting` — `OneToOneField` to `User` (not a plain `ForeignKey` — one
+  settings row per user, enforced at the DB level). Currently just `theme`.
+
+### `decks`
+- `Tag` — per-user label, `unique_together`/`UniqueConstraint` on
+  `(user, title)` to prevent duplicate tag names per user.
+- `Deck` — belongs to a `User` (`CASCADE` on delete) and optionally a `Tag`
+  (`SET_NULL` on delete — deleting a tag should untag decks, not delete them).
+- `Card` — belongs to a `Deck` (`CASCADE`). Carries independent SM-2 state:
+  `easiness_factor` (float, starts at 2.5), `interval` (days, int),
+  `repetitions` (int, resets to 0 on a failed review), `due_date` (date,
+  recalculated by the review logic — not `auto_now_add`), `last_reviewed`
+  (nullable — unset until the first review).
+
+### `pages`
+- `LandingPage` — singleton (only one row should ever exist). Enforced by
+  overriding `save()` to force `pk=1` on every save, and `delete()` to be a
+  no-op. Fetch via `LandingPage.load()` (a `get_or_create`-based classmethod),
+  not `.objects.first()` or `.objects.get()`.
+
+### Shared conventions across models
+- Every model that needs "soft delete" state uses `archived = BooleanField(default=False)`
+  — except `User`, which uses `is_active` instead (see above).
+- Timestamp fields always use `auto_now_add=True` (set once, at creation) or
+  `auto_now=True` (updated every save) — never a bare `DateTimeField()` with
+  no default, which breaks at `makemigrations` time.
+- Every model defines `__str__` for readable output in the admin/shell.
+- FK/O2O fields are named after the relation (`user`, `deck`, `tag`), never
+  the raw column (`user_id`, `deck_id`) — Django creates the `_id` column
+  automatically.
 
 ## Frontend behavior and tooling
-The sandbox page is intentionally a simple smoke test to verify that Tailwind and Alpine are working.
-
-`templates/sandbox/test.html` loads:
-- compiled CSS from `static/css/output.css`
-- Alpine.js from `static/js/alpine.min.js`
-
-It uses a tiny interactive demo:
-- a toggle button
-- a counter with +/- controls
-
-This is useful for confirming that:
-- Tailwind compilation is working
-- Alpine is loaded and responding
-- the CSS pipeline is generating output correctly
+Tailwind and Alpine wiring was originally verified via a `sandbox` app
+(now removed). Frontend verification currently happens against real pages as
+they're built out — there is no dedicated smoke-test route at the moment.
 
 ## Tailwind commands
 The project includes a Makefile for Tailwind:
@@ -132,29 +190,50 @@ This resets the local dev database volume.
 ## Working rules for future agents
 - Prefer Docker-based commands when working with the app
 - Use `docker compose exec web python manage.py ...` for Django management commands
-- Treat `sandbox/` as a testing app; it may be replaced or removed later as the real flashcard functionality is built out
+- Apps are organized by domain (`accounts`, `decks`, `pages`), not by
+  technical layer — when adding a model, place it by asking "which existing
+  app's data does this share a lifecycle/relationship with," not "what type
+  of thing is this." Only create a new app if the answer is genuinely "none."
+- `AUTH_USER_MODEL` must remain `'accounts.User'`. Do not introduce code that
+  assumes the default `django.contrib.auth.models.User`.
 - Do not commit `.env` files or local secrets
 - Keep configuration changes consistent with `.env.example`
 - Tailwind-generated output files can be rebuilt rather than handwritten if the front-end tooling is in use
+- Before running `migrate` on a fresh setup, confirm `AUTH_USER_MODEL` and
+  `INSTALLED_APPS` are correctly set — both are effectively one-shot
+  decisions that are costly to change after the first migration.
 
 ## Suggested next implementation path
-The repository is set up as a starter Django project, not a finished product. The next meaningful work likely includes:
-1. defining the actual flashcard models and data schema
-2. creating a flashcard generation flow from uploaded files or text input
-3. implementing spaced repetition logic (SM-2 style)
-4. building user-facing views and templates around the actual core feature
-5. replacing or expanding the sandbox app with real application code
+The core schema is defined and migrated. The next meaningful work likely
+includes:
+1. registering models in each app's `admin.py` so they're editable via
+   `/admin/` — nothing is registered yet, so `/admin/` currently only shows
+   Django's built-in `Groups`, not `User`/`Setting`/`Tag`/`Deck`/`Card`/
+   `LandingPage`. Note: `User` is a custom user model, so it needs a proper
+   `UserAdmin` subclass, not a bare `admin.site.register(User)`.
+2. implementing the SM-2 review logic as a method on `Card`
+   (e.g. `apply_review(quality)`), not as a standalone utility function
+3. building out real views/templates for `accounts` (auth) and `decks`
+   (deck/card CRUD, review flow) to replace current route stubs
+4. building the file-to-flashcard generation flow from uploaded files or text input
 
 ## Quick reference
 ```bash
 # start stack
 docker compose up --build
 
-# run migrations
+# generate + review + apply migrations (only needed after model changes)
+docker compose exec web python manage.py makemigrations accounts
+docker compose exec web python manage.py makemigrations decks
+docker compose exec web python manage.py makemigrations pages
 docker compose exec web python manage.py migrate
 
 # create superuser
 docker compose exec web python manage.py createsuperuser
+
+# inspect the database directly
+docker compose exec db psql -U <POSTGRES_USER> -d <POSTGRES_DB>
+# inside psql: \dt (list tables), \d <table> (describe), \pset pager off
 
 # watch Tailwind
 make tailwind-watch
@@ -163,11 +242,32 @@ make tailwind-watch
 make tailwind-build
 ```
 
+## Known footguns encountered so far
+- Running `makemigrations`/`migrate` from the host (outside Docker) will
+  fail to connect to Postgres — `POSTGRES_HOST=db` only resolves inside the
+  Docker network. `makemigrations` still works from the host (it only reads
+  models, doesn't need a DB connection) but will print a harmless
+  `RuntimeWarning` about host resolution. `migrate` genuinely needs to run
+  inside the `web` container.
+- If `migrate` is ever run before `AUTH_USER_MODEL` is set / before
+  `accounts` exists, Django's `admin` app will migrate against the default
+  user model, and later raise `InconsistentMigrationHistory` once
+  `accounts.User` becomes the real `AUTH_USER_MODEL`. Pre-launch, the fix is
+  `docker compose down -v` and a fresh `migrate`, not a manual reorder.
+
 ## Notes for AI agents
 When making changes in this repo:
-- confirm whether the code belongs in `sandbox/` or in a new app
+- confirm which existing app a new model/view belongs to before creating a
+  new app — see "App structure and model ownership" above
 - verify database and env assumptions before editing settings
+- never change `AUTH_USER_MODEL` on a database that has already been
+  migrated without a deliberate migration plan
 - prefer the existing Docker + Django patterns already in the project
 - test the app with the smallest relevant Django command or page load after changes
+- if `sandbox/` is still present in a given checkout, treat it as legacy —
+  do not add new functionality to it
 
-This repository is simple and intentionally lightweight at the moment; the most important context is that it is a Django foundation for a future flashcard app, with local containerized development and Tailwind-based UI prototyping already in place.
+This repository has moved from bare scaffolding into real domain modeling:
+the most important context is the `accounts` / `decks` / `pages` app split,
+the custom `User` model, and the SM-2 fields on `Card`, all of which future
+work should build on rather than restructure without cause.
