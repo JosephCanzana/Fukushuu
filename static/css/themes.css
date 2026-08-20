@@ -1,0 +1,67 @@
+/* theme-neutral (light) needs no block here — it's the default set in theme-tokens.css.
+   Everything below OVERRIDES those defaults for dark mode and/or the slate preset.
+   The <html> element carries a preset class (theme-neutral | theme-slate) and,
+   independently, an optional "dark" class. */
+
+.theme-neutral.dark {
+  --color-primary:        #FAFAFA;
+  --color-primary-hover:  #E4E4E7;
+  --color-primary-soft:   #27272A;
+  --color-bg:             #0C0C0D;
+  --color-surface:        #18181B;
+  --color-surface-alt:    #202023;
+  --color-txt-primary:    #F4F4F5;
+  --color-txt-secondary:  #A1A1AA;
+  --color-txt-muted:      #71717A;
+  --color-border:         #27272A;
+  --color-border-strong:  #3F3F46;
+  --color-success:        #22C55E;
+  --color-error:          #F87171;
+  --color-warning:        #FBBF24;
+  --color-info:           #60A5FA;
+  --color-accent:         #60A5FA;
+  --color-accent-hover:   #93C5FD;
+  --color-accent-soft:    #1E293B;
+}
+
+.theme-slate {
+  --color-primary:        #0F172A;
+  --color-primary-hover:  #1E293B;
+  --color-primary-soft:   #F1F5F9;
+  --color-bg:             #F8FAFC;
+  --color-surface:        #FFFFFF;
+  --color-surface-alt:    #F1F5F9;
+  --color-txt-primary:    #0F172A;
+  --color-txt-secondary:  #475569;
+  --color-txt-muted:      #94A3B8;
+  --color-border:         #E2E8F0;
+  --color-border-strong:  #CBD5E1;
+  --color-success:        #059669;
+  --color-error:          #E11D48;
+  --color-warning:        #D97706;
+  --color-info:           #0284C7;
+  --color-accent:         #6366F1;
+  --color-accent-hover:   #4F46E5;
+  --color-accent-soft:    #EEF2FF;
+}
+
+.theme-slate.dark {
+  --color-primary:        #F1F5F9;
+  --color-primary-hover:  #CBD5E1;
+  --color-primary-soft:   #1E293B;
+  --color-bg:             #0B1120;
+  --color-surface:        #0F172A;
+  --color-surface-alt:    #16213A;
+  --color-txt-primary:    #F1F5F9;
+  --color-txt-secondary:  #94A3B8;
+  --color-txt-muted:      #64748B;
+  --color-border:         #1E293B;
+  --color-border-strong:  #334155;
+  --color-success:        #34D399;
+  --color-error:          #FB7185;
+  --color-warning:        #FBBF24;
+  --color-info:           #38BDF8;
+  --color-accent:         #818CF8;
+  --color-accent-hover:   #A5B4FC;
+  --color-accent-soft:    #1E1B4B;
+}

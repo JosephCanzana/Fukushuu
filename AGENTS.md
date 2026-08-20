@@ -163,6 +163,52 @@ Tailwind and Alpine wiring was originally verified via a `sandbox` app
 (now removed). Frontend verification currently happens against real pages as
 they're built out — there is no dedicated smoke-test route at the moment.
 
+## Theming system
+Colors and fonts are driven entirely by CSS custom properties ("design
+tokens"), not raw Tailwind palette classes (`slate-*`, `indigo-*`, etc.) or
+Tailwind's built-in `dark:` variant. Two files split the responsibility:
+
+- `static/css/theme-tokens.css` — declares the token *names* (so Tailwind
+  generates utilities like `bg-primary`, `text-txt-secondary`, `font-main`)
+  and sets the `neutral` preset's light-mode values as the default fallback.
+  Also holds the `@font-face` declarations (Space Grotesk, JetBrains Mono,
+  self-hosted from `static/fonts/`, variable-weight files preferred so one
+  `@font-face` block covers the full weight range).
+- `static/css/themes.css` — override blocks for every state that differs
+  from the default: `.theme-neutral.dark`, `.theme-slate`,
+  `.theme-slate.dark`. `theme-neutral` (light) needs no block since it's
+  already the default in `theme-tokens.css`.
+
+Two presets (`neutral`, `slate`) × two modes (light, dark) = 4 rendered
+combinations, expressed as 1 default + 3 override blocks. Adding a new
+preset means adding its light block (if it isn't the default) and its dark
+block to `themes.css`, plus a `theme-<name>` class option.
+
+`<html>` carries both a preset class (`theme-neutral` / `theme-slate`,
+currently hardcoded to `theme-neutral` in `base.html` since the preset
+picker doesn't exist yet) and, independently, an optional `dark` class.
+These two are deliberately decoupled — a user's light/dark preference and
+their color preset are separate choices with separate scopes:
+
+- **Light/dark** is per-device: stored in `localStorage`, applied via an
+  inline synchronous script in `base.html`'s `<head>` (before any
+  stylesheet, to avoid a flash of the wrong mode). No login required, works
+  on public pages.
+- **Preset** is meant to be an account-level choice once built (planned:
+  `accounts.Setting`, following the same field the `theme` column already
+  reserves), so it should follow a logged-in user across devices rather
+  than living in `localStorage`.
+
+When building new pages/components: use the token utilities (`bg-bg`,
+`bg-surface`, `text-txt-primary`, `text-txt-secondary`, `border-border`,
+`bg-accent`, etc.) exclusively for color — never hardcode a Tailwind
+palette color or reach for `dark:` variants, since neither responds to the
+`.dark` class this project actually toggles.
+
+A temporary preset-cycling button may be present in `navbar.html` for
+manual testing (clearly marked `TEMPORARY` in a comment above it, not
+persisted anywhere) — remove it once the real settings-page picker exists.
+
 ## Tailwind commands
 The project includes a Makefile for Tailwind:
 
@@ -266,6 +312,12 @@ When making changes in this repo:
 - test the app with the smallest relevant Django command or page load after changes
 - if `sandbox/` is still present in a given checkout, treat it as legacy —
   do not add new functionality to it
+- keep `{# ... #}` Django comments at file-top or on their own line between
+  tags — never inside a tag's attribute list (see "Template comment
+  placement" above)
+- use theme token utility classes (`bg-bg`, `text-txt-primary`, `bg-accent`,
+  etc.) for all color; never raw Tailwind palette classes or `dark:`
+  variants (see "Theming system" above)
 
 This repository has moved from bare scaffolding into real domain modeling:
 the most important context is the `accounts` / `decks` / `pages` app split,
@@ -303,3 +355,15 @@ pages (e.g. `pages.LandingPage`) and `base_app.html` for authenticated pages
 (deck/card CRUD, review flow). Add new nav entries to the relevant partial
 in `templates/includes/`, not inline in the layout templates, so navigation
 stays centralized and easy to update.
+
+### Template comment placement
+`{# ... #}` Django template comments should only appear at the top of a
+file (file-level notes, e.g. "included by base_public.html") or on their
+own line between tags (e.g. a `TEMPORARY` note above a block being called
+out). Do not place a `{# ... #}` comment *inside* an HTML tag's attribute
+list — e.g. between a tag's opening `<button ...` and its closing `>`. It
+still renders correctly, but it's easy to misread as part of the tag or to
+break with a careless edit, and it hurts scanability in already
+attribute-heavy tags (Alpine's `x-data`/`@click`/`:aria-label` in this
+project makes tags long enough already). Put the comment on its own line
+immediately above the tag instead.

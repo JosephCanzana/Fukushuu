@@ -1,27 +1,41 @@
 {# Public-facing top navigation bar. Included by base_public.html. #}
 {# TODO: swap the '#' hrefs for {% url %} tags once accounts/pages routes are named. #}
-<nav class="border-b border-slate-200 dark:border-slate-800">
+<nav class="border-b border-border bg-surface">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="#" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+        <a href="#" class="text-lg font-semibold tracking-tight text-txt-primary font-main">
             Fukushuu
         </a>
 
         <div class="flex items-center gap-2">
             <a href="#"
-               class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+               class="px-3 py-1.5 text-sm font-medium rounded-md text-txt-secondary hover:bg-surface-alt">
                 Log in
             </a>
             <a href="{% url 'accounts:landing' %}"
-               class="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-500">
+               class="px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
                 Sign up
             </a>
 
-            {# Placeholder only — dark/light mode behavior not implemented yet. #}
+            <!-- Light/dark toggle — independent of the theme preset (neutral/slate),
+               which is a separate, settings-page-controlled choice. Persists to
+               localStorage; base.html applies the stored value before first paint
+               to avoid a flash of the wrong mode. -->
             <button type="button"
-                    aria-label="Toggle dark mode (not yet functional)"
-                    disabled
-                    class="ml-1 w-9 h-9 flex items-center justify-center rounded-md text-slate-500 border border-slate-200 dark:border-slate-700 dark:text-slate-400 cursor-not-allowed">
-                <span aria-hidden="true">&#9680;</span>
+                    x-data="{ dark: document.documentElement.classList.contains('dark') }"
+                    @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('color-scheme', dark ? 'dark' : 'light')"
+                    :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
+                    class="ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                <span x-show="!dark" aria-hidden="true">&#9680;</span>
+                <span x-show="dark" x-cloak aria-hidden="true">&#9788;</span>
+            </button>
+
+            <!-- TEMPORARY — for trying out presets only, remove once the real
+               settings-page picker exists. Not persisted anywhere. -->
+            <button type="button"
+                    x-data="{ preset: document.documentElement.classList.contains('theme-slate') ? 'slate' : 'neutral' }"
+                    @click="preset = preset === 'neutral' ? 'slate' : 'neutral'; document.documentElement.classList.remove('theme-neutral', 'theme-slate'); document.documentElement.classList.add('theme-' + preset)"
+                    class="ml-1 px-2.5 py-1.5 text-xs font-medium rounded-md text-txt-secondary border border-border hover:bg-surface-alt"
+                    x-text="preset === 'neutral' ? 'Try: Slate' : 'Try: Neutral'">
             </button>
         </div>
     </div>
