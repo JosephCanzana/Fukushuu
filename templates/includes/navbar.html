@@ -1,0 +1,28 @@
+{# Public-facing top navigation bar. Included by base_public.html. #}
+{# TODO: swap the '#' hrefs for {% url %} tags once accounts/pages routes are named. #}
+<nav class="border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="#" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            Fukushuu
+        </a>
+
+        <div class="flex items-center gap-2">
+            <a href="#"
+               class="px-3 py-1.5 text-sm font-medium rounded-md text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                Log in
+            </a>
+            <a href="{% url 'accounts:landing' %}"
+               class="px-3 py-1.5 text-sm font-medium rounded-md bg-indigo-600 text-white hover:bg-indigo-500">
+                Sign up
+            </a>
+
+            {# Placeholder only — dark/light mode behavior not implemented yet. #}
+            <button type="button"
+                    aria-label="Toggle dark mode (not yet functional)"
+                    disabled
+                    class="ml-1 w-9 h-9 flex items-center justify-center rounded-md text-slate-500 border border-slate-200 dark:border-slate-700 dark:text-slate-400 cursor-not-allowed">
+                <span aria-hidden="true">&#9680;</span>
+            </button>
+        </div>
+    </div>
+</nav>

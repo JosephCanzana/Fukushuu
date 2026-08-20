@@ -1,0 +1,40 @@
+{# Authenticated app sidebar. Included by base_app.html. #}
+{# TODO: swap the '#' hrefs for {% url %} tags once decks/accounts routes are named,
+   and mark the active link (e.g. via request.resolver_match.url_name). #}
+<aside class="w-60 shrink-0 border-r border-slate-200 dark:border-slate-800 flex flex-col">
+    <div class="h-16 flex items-center px-6">
+        <a href="#" class="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            Fukushuu
+        </a>
+    </div>
+
+    <nav class="flex-1 px-3 py-4 space-y-1">
+        <a href="#"
+           class="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            Dashboard
+        </a>
+        <a href="#"
+           class="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            Decks
+        </a>
+        <a href="#"
+           class="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            Review
+        </a>
+        <a href="#"
+           class="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+            Settings
+        </a>
+    </nav>
+
+    <div class="px-3 py-4 border-t border-slate-200 dark:border-slate-800">
+        {# Placeholder only — dark/light mode behavior not implemented yet. #}
+        <button type="button"
+                aria-label="Toggle dark mode (not yet functional)"
+                disabled
+                class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md text-slate-500 border border-slate-200 dark:border-slate-700 dark:text-slate-400 cursor-not-allowed">
+            <span aria-hidden="true">&#9680;</span>
+            <span>Dark mode</span>
+        </button>
+    </div>
+</aside>

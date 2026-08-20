@@ -271,3 +271,35 @@ This repository has moved from bare scaffolding into real domain modeling:
 the most important context is the `accounts` / `decks` / `pages` app split,
 the custom `User` model, and the SM-2 fields on `Card`, all of which future
 work should build on rather than restructure without cause.
+
+
+## Template layout system
+A base/layout template structure now exists under `templates/`:
+
+- `templates/base.html` — shared HTML shell only: static asset loading,
+  `<title>` block, the self-hosted Alpine.js `<script>` tag, and a single
+  `{% block base %}` that `base_public.html` / `base_app.html` override.
+  Contains no navigation or page-specific markup.
+- `templates/base_public.html` — layout for logged-out/public pages.
+  Extends `base.html`, includes `includes/navbar.html` (top nav bar), and
+  exposes `{% block body %}` for page content.
+- `templates/base_app.html` — layout for authenticated app pages. Extends
+  `base.html`, includes `includes/sidebar.html` (left sidebar nav instead of
+  a top navbar), and exposes `{% block body %}` for page content.
+- `templates/includes/navbar.html` — public navbar partial: brand link,
+  Log in / Sign up links, and a disabled dark-mode toggle placeholder.
+- `templates/includes/sidebar.html` — app sidebar partial: brand link, nav
+  links (Dashboard, Decks, Review, Settings), and a disabled dark-mode
+  toggle placeholder.
+
+Navigation links in both partials currently use `href="#"` with `TODO`
+comments — `accounts` and `decks` URL names aren't finalized yet, so these
+need to be swapped for `{% url %}` tags once those routes are named. The
+dark/light mode toggles are inert placeholders (`disabled`, no Alpine
+`x-data`/`@click` wiring) — behavior is intentionally not implemented yet.
+
+When building new pages: extend `base_public.html` for logged-out/marketing
+pages (e.g. `pages.LandingPage`) and `base_app.html` for authenticated pages
+(deck/card CRUD, review flow). Add new nav entries to the relevant partial
+in `templates/includes/`, not inline in the layout templates, so navigation
+stays centralized and easy to update.

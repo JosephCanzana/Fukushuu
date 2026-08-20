@@ -75,12 +75,30 @@ templates/         # Project-wide templates (base.html)
 that real apps exist. If you're on an older branch/checkout that still has it,
 see **Removing sandbox** below before merging.
 
+### Template layout
+
+Pages extend one of two layouts, both of which extend the shared `base.html`
+shell (static assets, `<title>` block, Alpine.js):
+
+- **`base_public.html`** — logged-out/marketing pages (e.g. `pages.LandingPage`).
+  Includes `includes/navbar.html`: brand link, Log in / Sign up, and a
+  dark-mode toggle placeholder.
+- **`base_app.html`** — authenticated app pages (deck/card CRUD, review flow).
+  Includes `includes/sidebar.html`: brand link, nav links, and a dark-mode
+  toggle placeholder.
+
+Nav links in both partials use `href="#"` for now — `accounts`/`decks` URL
+names aren't finalized yet. Add new nav entries to the relevant partial in
+`templates/includes/`, not inline in the layout templates, so navigation
+stays centralized. Dark/light mode toggles are inert placeholders; the
+behavior itself isn't implemented yet.
+
 ## Verify Tailwind + Alpine are working
 
 There's currently no dedicated smoke-test page (that was `sandbox/`, since
 removed). Confirm the frontend pipeline is working by checking any real page
-that extends `base.html`:
-
+that extends `base_public.html` or `base_app.html` (both inherit from
+`base.html`):
 - Styled layout, correct colors/spacing → Tailwind is compiling correctly.
 - Any Alpine-driven interaction (toggles, dropdowns) responds on click → Alpine.js is loaded.
 

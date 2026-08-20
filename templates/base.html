@@ -1,0 +1,15 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fukushuu{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/output.css' %}">
+    <script defer src="{% static 'js/alpine.min.js' %}"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 antialiased">
+    {% block base %}{% endblock %}
+</body>
+</html>
