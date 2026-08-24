@@ -169,11 +169,14 @@ tokens"), not raw Tailwind palette classes (`slate-*`, `indigo-*`, etc.) or
 Tailwind's built-in `dark:` variant. Two files split the responsibility:
 
 - `static/css/theme-tokens.css` — declares the token *names* (so Tailwind
-  generates utilities like `bg-primary`, `text-txt-secondary`, `font-main`)
-  and sets the `neutral` preset's light-mode values as the default fallback.
-  Also holds the `@font-face` declarations (Space Grotesk, JetBrains Mono,
-  self-hosted from `static/fonts/`, variable-weight files preferred so one
-  `@font-face` block covers the full weight range).
+  generates utilities like `bg-primary`, `text-txt-secondary`, `font-main`,
+  `font-mono`) and sets the `neutral` preset's light-mode values as the
+  default fallback. Also holds the `@font-face` declarations (Space Grotesk,
+  JetBrains Mono, self-hosted from `static/fonts/`, variable-weight files
+  preferred so one `@font-face` block covers the full weight range) and the
+  `--font-main` / `--font-mono` variables that map each face to its
+  Tailwind utility — both must exist together, since declaring only the
+  `@font-face` doesn't generate the utility class on its own.
 - `static/css/themes.css` — override blocks for every state that differs
   from the default: `.theme-neutral.dark`, `.theme-slate`,
   `.theme-slate.dark`. `theme-neutral` (light) needs no block since it's
@@ -205,9 +208,17 @@ When building new pages/components: use the token utilities (`bg-bg`,
 palette color or reach for `dark:` variants, since neither responds to the
 `.dark` class this project actually toggles.
 
-A temporary preset-cycling button may be present in `navbar.html` for
-manual testing (clearly marked `TEMPORARY` in a comment above it, not
-persisted anywhere) — remove it once the real settings-page picker exists.
+A temporary preset picker lives in `navbar.html` for manual testing
+(clearly marked `TEMPORARY` in a comment above it, not persisted anywhere)
+— remove it once the real settings-page picker exists. It's built as a
+dropdown list (Alpine `x-data`, an `open` flag, a `presets` array), not a
+button that cycles between two hardcoded values, specifically so that
+adding a third preset later is a one-line addition to `presets` —
+`{ id, label, accent }` — rather than a rewrite of the click handler. The
+`accent` field is a hardcoded hex used only for that preset's swatch dot in
+the picker UI; it must be kept in sync by hand with that preset's
+`--color-accent` value in `themes.css`, since the picker can't read another
+preset's CSS variables while that preset isn't the active one on `<html>`.
 
 ## Tailwind commands
 The project includes a Makefile for Tailwind:
@@ -338,23 +349,35 @@ A base/layout template structure now exists under `templates/`:
 - `templates/base_app.html` — layout for authenticated app pages. Extends
   `base.html`, includes `includes/sidebar.html` (left sidebar nav instead of
   a top navbar), and exposes `{% block body %}` for page content.
-- `templates/includes/navbar.html` — public navbar partial: brand link,
-  Log in / Sign up links, and a disabled dark-mode toggle placeholder.
+- `templates/includes/navbar.html` — public navbar partial: brand link
+  (wrapping `includes/logo.html`), Log in / Sign up links, a working
+  light/dark toggle (persists to `localStorage`), and the temporary preset
+  picker described under "Theming system" above.
 - `templates/includes/sidebar.html` — app sidebar partial: brand link, nav
   links (Dashboard, Decks, Review, Settings), and a disabled dark-mode
   toggle placeholder.
+- `templates/includes/logo.html` — the Fukushuu logomark + wordmark,
+  reusable anywhere via `{% include "includes/logo.html" %}`. The mark
+  itself (three arcs from one origin, each ending in a dot) is drawn with
+  `currentColor` and no other hardcoded color, so it adapts to whatever
+  theme/preset is active without changes to the partial. It's visual only —
+  wrap it in an `<a>` at the call site if it needs to link somewhere (see
+  its use in `navbar.html`).
 
 Navigation links in both partials currently use `href="#"` with `TODO`
 comments — `accounts` and `decks` URL names aren't finalized yet, so these
-need to be swapped for `{% url %}` tags once those routes are named. The
-dark/light mode toggles are inert placeholders (`disabled`, no Alpine
-`x-data`/`@click` wiring) — behavior is intentionally not implemented yet.
+need to be swapped for `{% url %}` tags once those routes are named.
+`navbar.html`'s light/dark toggle is fully wired (Alpine `x-data`/`@click`,
+persists to `localStorage`); `sidebar.html`'s is still an inert placeholder
+(`disabled`, no Alpine wiring) — behavior hasn't been ported over there yet.
 
 When building new pages: extend `base_public.html` for logged-out/marketing
-pages (e.g. `pages.LandingPage`) and `base_app.html` for authenticated pages
-(deck/card CRUD, review flow). Add new nav entries to the relevant partial
-in `templates/includes/`, not inline in the layout templates, so navigation
-stays centralized and easy to update.
+pages (e.g. `pages.LandingPage` — see `templates/landing.html` for a
+built-out example that leans on the token system, `includes/logo.html`,
+and Alpine for a small interactive demo) and `base_app.html` for
+authenticated pages (deck/card CRUD, review flow). Add new nav entries to
+the relevant partial in `templates/includes/`, not inline in the layout
+templates, so navigation stays centralized and easy to update.
 
 ### Template comment placement
 `{# ... #}` Django template comments should only appear at the top of a

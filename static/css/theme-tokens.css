@@ -20,6 +20,12 @@
 
 @theme {
 
+  /* Font families were declared above via @font-face but never mapped to a
+     Tailwind token, so `font-main` / `font-mono` didn't actually exist yet.
+     Added here — nothing else in this file changed. */
+  --font-main: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
   --color-primary:        #18181B;
   --color-primary-hover:  #27272A;
   --color-primary-soft:   #F4F4F5;

@@ -2,8 +2,8 @@
 {# TODO: swap the '#' hrefs for {% url %} tags once accounts/pages routes are named. #}
 <nav class="border-b border-border bg-surface">
     <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="#" class="text-lg font-semibold tracking-tight text-txt-primary font-main">
-            Fukushuu
+        <a href="#" class="hover:opacity-80 text-txt-primary">
+            {% include "includes/logo.html" %}
         </a>
 
         <div class="flex items-center gap-2">
@@ -29,14 +29,59 @@
                 <span x-show="dark" x-cloak aria-hidden="true">&#9788;</span>
             </button>
 
-            <!-- TEMPORARY — for trying out presets only, remove once the real
-               settings-page picker exists. Not persisted anywhere. -->
-            <button type="button"
-                    x-data="{ preset: document.documentElement.classList.contains('theme-slate') ? 'slate' : 'neutral' }"
-                    @click="preset = preset === 'neutral' ? 'slate' : 'neutral'; document.documentElement.classList.remove('theme-neutral', 'theme-slate'); document.documentElement.classList.add('theme-' + preset)"
-                    class="ml-1 px-2.5 py-1.5 text-xs font-medium rounded-md text-txt-secondary border border-border hover:bg-surface-alt"
-                    x-text="preset === 'neutral' ? 'Try: Slate' : 'Try: Neutral'">
-            </button>
+            <!-- TEMPORARY — preset picker for trying out color presets before the
+               real settings-page picker exists. Not persisted anywhere. A list
+               instead of a toggle: adding a future preset is one more entry in
+               `presets` below, no extra branching or markup. -->
+            <div x-data="{
+                    open: false,
+                    presets: [
+                        { id: 'neutral', label: 'Neutral', accent: '#3B82F6' },
+                        { id: 'slate',   label: 'Nova',   accent: '#6366F1' },
+                        { id: 'forest',   label: 'Macha',   accent: '#65A30D' },
+                    ],
+                    preset: document.documentElement.classList.contains('theme-slate') ? 'slate' : 'neutral',
+                    select(id) {
+                        this.preset = id;
+                        document.documentElement.classList.remove(...this.presets.map(p => 'theme-' + p.id));
+                        document.documentElement.classList.add('theme-' + id);
+                        this.open = false;
+                    }
+                 }"
+                 @click.outside="open = false"
+                 @keydown.escape="open = false"
+                 class="relative ml-1">
+                <button type="button"
+                        @click="open = !open"
+                        :aria-expanded="open"
+                        :aria-label="`Color preset: ${presets.find(p => p.id === preset).label}. Click to change.`"
+                        aria-haspopup="listbox"
+                        class="w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                    <span class="w-3 h-3 rounded-full border border-border-strong"
+                          :style="`background-color: ${presets.find(p => p.id === preset).accent}`"
+                          aria-hidden="true"></span>
+                </button>
+
+                <ul x-show="open"
+                    x-cloak
+                    x-transition.origin.top.right
+                    role="listbox"
+                    class="absolute right-0 mt-2 w-36 py-1 rounded-md border border-border bg-surface shadow-lg z-10">
+                    <template x-for="p in presets" :key="p.id">
+                        <li role="option"
+                            :aria-selected="preset === p.id"
+                            @click="select(p.id)"
+                            :class="preset === p.id ? 'text-txt-primary' : 'text-txt-secondary'"
+                            class="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-surface-alt">
+                            <span class="w-2.5 h-2.5 rounded-full border border-border-strong"
+                                  :style="`background-color: ${p.accent}`"
+                                  aria-hidden="true"></span>
+                            <span x-text="p.label"></span>
+                            <span x-show="preset === p.id" x-cloak class="ml-auto text-accent" aria-hidden="true">&#10003;</span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
         </div>
     </div>
 </nav>

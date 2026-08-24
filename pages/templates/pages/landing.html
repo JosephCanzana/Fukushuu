@@ -1,5 +1,201 @@
 {% extends "base_public.html" %}
+
+{% block title %}Fukushuu — review that sticks{% endblock %}
+
 {% block body %}
-    This is the landing page
-    <a href="{% url 'accounts:landing' %}">Accounts!</a>
+
+<!-- Hero -->
+<section class="relative overflow-hidden pt-16 pb-24 md:pt-24 md:pb-32">
+    <p class="pointer-events-none select-none absolute -top-10 -left-6 md:-left-14 font-main font-semibold text-primary opacity-[0.045] text-[170px] sm:text-[240px] md:text-[300px] leading-none tracking-tighter"
+       aria-hidden="true">
+        &#24489;&#32722;
+    </p>
+
+    <div class="relative grid md:grid-cols-[1.15fr_0.85fr] gap-14 items-center">
+        <div>
+            <p class="font-mono text-xs tracking-widest uppercase text-txt-muted mb-5">
+                &#24489;&#32722; &middot; spaced repetition, done right
+            </p>
+            <h1 class="font-main font-semibold text-5xl sm:text-6xl md:text-7xl leading-[1.05] tracking-tight text-txt-primary">
+                Review less.<br>Remember more.
+            </h1>
+            <p class="mt-6 text-lg text-txt-secondary max-w-xl leading-relaxed">
+                Fukushuu schedules every flashcard for right before you'd
+                forget it, so study time goes toward what's actually
+                slipping — not what you already know cold.
+            </p>
+            <div class="mt-10 flex flex-wrap items-center gap-4">
+                <a href="{% url 'accounts:landing' %}"
+                   class="px-5 py-2.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
+                    Start reviewing
+                </a>
+                <a href="#why"
+                   class="px-5 py-2.5 text-sm font-medium rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                    Why it works
+                </a>
+            </div>
+        </div>
+
+        <!-- A real, tappable flashcard — the actual product, not a mockup of it.
+           Grading it plays out the exact idea the "why it helps" section
+           explains below: better grades push the next review further out. -->
+        <div x-data="{ flipped: false, next: null }"
+             class="[perspective:1000px] w-full max-w-xs mx-auto md:mx-0 md:ml-auto">
+            <div class="relative h-56 transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer"
+                 :style="`transform: rotateY(${flipped ? 180 : 0}deg)`"
+                 @click="flipped = !flipped">
+                <div class="absolute inset-0 [backface-visibility:hidden] rounded-2xl border border-border bg-surface shadow-sm flex flex-col items-center justify-center gap-2 p-6">
+                    <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted">card &middot; front</p>
+                    <p class="font-main text-4xl font-semibold text-txt-primary">&#29356;</p>
+                    <p class="text-xs text-txt-muted mt-2">tap to flip</p>
+                </div>
+                <div class="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border bg-surface-alt flex flex-col items-center justify-center gap-1 p-6">
+                    <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted">card &middot; back</p>
+                    <p class="font-main text-2xl font-semibold text-txt-primary">dog</p>
+                    <p class="text-xs text-txt-secondary">inu</p>
+                </div>
+            </div>
+
+            <div class="mt-4 grid grid-cols-3 gap-2" x-show="flipped" x-cloak>
+                <button type="button" @click="next = 'tomorrow'; flipped = false"
+                        class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
+                    Again
+                </button>
+                <button type="button" @click="next = 'in 6 days'; flipped = false"
+                        class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
+                    Good
+                </button>
+                <button type="button" @click="next = 'in 13 days'; flipped = false"
+                        class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
+                    Easy
+                </button>
+            </div>
+            <p class="mt-3 font-mono text-xs text-txt-muted h-4">
+                <span x-show="next" x-cloak>next review: <span x-text="next" class="text-accent"></span></span>
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- About -->
+<section id="about" class="py-20 border-t border-border">
+    <div class="grid md:grid-cols-[1fr_1.2fr] gap-10 md:gap-16">
+        <div>
+            <p class="font-mono text-xs tracking-widest uppercase text-txt-muted mb-3">about</p>
+            <h2 class="font-main font-semibold text-3xl text-txt-primary tracking-tight">
+                What "fukushuu" means
+            </h2>
+        </div>
+        <div class="space-y-4 text-txt-secondary leading-relaxed max-w-2xl">
+            <p>
+                <span class="font-mono text-txt-primary">&#24489;&#32722; (fukushuu)</span>
+                is the Japanese word for "review." It's the study habit the
+                app is named after — going back over material on purpose, at
+                the right moment, instead of cramming it once and hoping it
+                sticks.
+            </p>
+            <p>
+                Fukushuu is a flashcard app built around that habit. Cards
+                live in decks, decks can carry tags, and every card tracks
+                its own review history: how easy it's been, how long since
+                the last pass, and exactly when it's due again.
+            </p>
+        </div>
+    </div>
+
+    <div class="mt-14">
+        <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted mb-6">
+            one card's review schedule
+        </p>
+        <div class="flex items-center w-full max-w-xl">
+            <div class="flex flex-col items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent"></span>
+                <span class="mt-2 font-mono text-[11px] text-txt-muted">day 1</span>
+            </div>
+            <div class="flex-[1] h-px bg-border mx-1"></div>
+            <div class="flex flex-col items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent opacity-80"></span>
+                <span class="mt-2 font-mono text-[11px] text-txt-muted">day 6</span>
+            </div>
+            <div class="flex-[2] h-px bg-border mx-1"></div>
+            <div class="flex flex-col items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent opacity-60"></span>
+                <span class="mt-2 font-mono text-[11px] text-txt-muted">day 16</span>
+            </div>
+            <div class="flex-[4] h-px bg-border mx-1"></div>
+            <div class="flex flex-col items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-accent opacity-40"></span>
+                <span class="mt-2 font-mono text-[11px] text-txt-muted">day 35</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why it helps -->
+<section id="why" class="py-20 border-t border-border">
+    <p class="font-mono text-xs tracking-widest uppercase text-txt-muted mb-3">why it helps</p>
+    <h2 class="font-main font-semibold text-3xl text-txt-primary tracking-tight max-w-lg mb-12">
+        Forgetting has a schedule. So does Fukushuu.
+    </h2>
+
+    <div class="grid sm:grid-cols-3 gap-6">
+        <div class="rounded-2xl border border-border bg-surface-alt p-6">
+            <svg class="w-6 h-6 text-accent mb-4" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M6 26C6 20.4772 10.4772 16 16 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="16" cy="16" r="1.7" fill="currentColor"/>
+            </svg>
+            <h3 class="font-main font-semibold text-txt-primary mb-2">Timed to your memory</h3>
+            <p class="text-txt-secondary text-sm leading-relaxed">
+                The SM-2 algorithm pushes a card's next review further out
+                every time you get it right, and pulls it back in the
+                moment you don't.
+            </p>
+        </div>
+        <div class="rounded-2xl border border-border bg-surface-alt p-6">
+            <svg class="w-6 h-6 text-accent mb-4" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M6 26C6 17.7157 12.7157 12 20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="20" cy="12" r="1.7" fill="currentColor"/>
+            </svg>
+            <h3 class="font-main font-semibold text-txt-primary mb-2">A pace per card</h3>
+            <p class="text-txt-secondary text-sm leading-relaxed">
+                Every card keeps its own easiness factor, so a stubborn verb
+                conjugation gets reviewed far more often than the fact
+                you've never once missed.
+            </p>
+        </div>
+        <div class="rounded-2xl border border-border bg-surface-alt p-6">
+            <svg class="w-6 h-6 text-accent mb-4" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+                <path d="M6 26C6 14.1634 15.1634 6 26 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <circle cx="26" cy="6" r="1.7" fill="currentColor"/>
+            </svg>
+            <h3 class="font-main font-semibold text-txt-primary mb-2">Short, honest sessions</h3>
+            <p class="text-txt-secondary text-sm leading-relaxed">
+                Only cards that are actually due show up, so a review
+                session stays short enough to finish before the coffee gets
+                cold.
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- Under the hood -->
+<section class="py-20 border-t border-border">
+    <p class="font-mono text-xs tracking-widest uppercase text-txt-muted mb-3">under the hood</p>
+    <h2 class="font-main font-semibold text-3xl text-txt-primary tracking-tight mb-8">
+        Built with
+    </h2>
+    <div class="flex flex-wrap gap-3 font-mono text-sm">
+        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Django</span>
+        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">PostgreSQL</span>
+        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Tailwind CSS</span>
+        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Alpine.js</span>
+        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Docker</span>
+    </div>
+</section>
+
+<footer class="py-10 border-t border-border flex items-center justify-between text-txt-muted">
+    {% include "includes/logo.html" %}
+    <span class="font-mono text-xs">&copy; {% now "Y" %} Fukushuu</span>
+</footer>
+
 {% endblock %}
