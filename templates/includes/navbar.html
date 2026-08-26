@@ -56,7 +56,7 @@
                     x-data="{ dark: document.documentElement.classList.contains('dark') }"
                     @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('color-scheme', dark ? 'dark' : 'light')"
                     :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
-                    class="hidden md:show ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                    class="hidden md:flex ml-1 w-9 h-9 items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
                 <svg x-show="!dark" aria-hidden="true" class="size-5">
                     <use href="{% static 'icons/sprite.svg' %}#moon"></use>
                 </svg>
