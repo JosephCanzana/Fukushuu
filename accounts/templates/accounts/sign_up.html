@@ -1,0 +1,75 @@
+{% extends "base_public.html" %}
+
+{% block title %}Fukushuu — review that sticks{% endblock %}
+
+{% block body %}
+<div class="min-h-[80vh] py-12 flex items-center justify-center">
+
+    <!-- sign up form -->
+    <div class="px-4">
+        <div class="mx-auto w-full max-w-lg bg-surface border border-border rounded-lg p-8">
+
+            <!-- brand mark -->
+            <div class="w-32 mb-6">
+                {% include "includes/logo.html" %}
+            </div>
+
+            <h1 class="text-3xl font-main text-txt-primary mb-1">Create your account</h1>
+            <p class="text-base md:text-lg text-txt-secondary mb-6">Start building decks that remember for you.</p>
+
+            <form class="flex flex-col gap-4" action="{% url 'accounts:sign_up' %}" method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="flex flex-col gap-1">
+                    <label for="id_username" class="text-sm md:text-base text-txt-secondary">Username</label>
+                    <input
+                        type="text" name="username" id="id_username" required
+                        class="w-full rounded-md border border-border bg-bg text-txt-primary px-3 py-2
+                               placeholder:text-txt-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="yourname">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="id_email" class="text-sm md:text-base text-txt-secondary">Email</label>
+                    <input
+                        type="email" name="email" id="id_email" required
+                        class="w-full rounded-md border border-border bg-bg text-txt-primary px-3 py-2
+                               placeholder:text-txt-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="you@example.com">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="id_password" class="text-sm md:text-base text-txt-secondary">Password</label>
+                    <input
+                        type="password" name="password" id="id_password" required
+                        class="w-full rounded-md border border-border bg-bg text-txt-primary px-3 py-2
+                               placeholder:text-txt-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="••••••••">
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="id_password_confirmation" class="text-sm md:text-base text-txt-secondary">Confirm password</label>
+                    <input
+                        type="password" name="password_confirmation" id="id_password_confirmation" required
+                        class="w-full rounded-md border border-border bg-bg text-txt-primary px-3 py-2
+                               placeholder:text-txt-secondary/60 focus:outline-none focus:ring-2 focus:ring-accent"
+                        placeholder="••••••••">
+                </div>
+
+                <button
+                    type="submit"
+                    class="mt-2 w-full rounded-md bg-accent text-bg font-medium py-2
+                           hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-surface">
+                    Sign up
+                </button>
+            </form>
+
+            <p class="text-sm text-txt-secondary mt-6 text-center">
+                Already have an account?
+                <a href="#" class="text-accent hover:underline">Log in</a>
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
