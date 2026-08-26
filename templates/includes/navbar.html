@@ -1,3 +1,4 @@
+{% load static %}
 {# Public-facing top navigation bar. Included by base_public.html. #}
 {# TODO: swap the '#' hrefs for {% url %} tags once accounts/pages routes are named. #}
 <nav class="border-b sticky top-0 z-100 border-border bg-surface">
@@ -25,8 +26,12 @@
                     @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('color-scheme', dark ? 'dark' : 'light')"
                     :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
                     class="ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
-                <span x-show="!dark" aria-hidden="true">&#9680;</span>
-                <span x-show="dark" x-cloak aria-hidden="true">&#9788;</span>
+                <svg x-show="!dark" aria-hidden="true" class="size-5">
+                    <use href="{% static 'icons/sprite.svg' %}#moon"></use>
+                </svg>
+                <svg x-show="dark" x-cloak aria-hidden="true" class="size-5">
+                    <use href="{% static 'icons/sprite.svg' %}#sun"></use>
+                </svg>
             </button>
 
             <!-- TEMPORARY — preset picker for trying out color presets before the
@@ -77,7 +82,9 @@
                                   :style="`background-color: ${p.accent}`"
                                   aria-hidden="true"></span>
                             <span x-text="p.label"></span>
-                            <span x-show="preset === p.id" x-cloak class="ml-auto text-accent" aria-hidden="true">&#10003;</span>
+                            <svg x-show="preset === p.id" x-cloak aria-hidden="true" class="ml-auto size-4 text-accent">
+                                <use href="{% static 'icons/sprite.svg' %}#check"></use>
+                            </svg>
                         </li>
                     </template>
                 </ul>

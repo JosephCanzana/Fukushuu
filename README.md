@@ -75,6 +75,27 @@ templates/         # Project-wide templates (base.html)
 that real apps exist. If you're on an older branch/checkout that still has it,
 see **Removing sandbox** below before merging.
 
+### Icons
+
+Icons are [Heroicons](https://heroicons.com) (outline, 24px), self-hosted as
+a single SVG sprite at `static/icons/sprite.svg` — no icon font, no Google
+Fonts/Material Icons, no CDN.
+
+```html
+{% load static %}
+<svg class="size-6 text-txt-secondary" aria-hidden="true">
+  <use href="{% static 'icons/sprite.svg' %}#moon"></use>
+</svg>
+```
+
+- Icon name = the Heroicons filename without `.svg` (`moon`, `check`, etc.)
+- Color/size follow the same theme-token classes as everything else
+  (`text-txt-secondary`, `text-accent`) — icons inherit `currentColor`
+- Put `aria-hidden="true"` on the icon, `aria-label` on the parent
+  `<button>`/`<a>` — the icon itself has no accessible text
+- The sprite bundles all Heroicons outline icons, so new icons never
+  require a rebuild — just reference `#icon-name`
+
 ### Template layout
 
 Pages extend one of two layouts, both of which extend the shared `base.html`

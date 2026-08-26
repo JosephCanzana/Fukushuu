@@ -220,6 +220,54 @@ the picker UI; it must be kept in sync by hand with that preset's
 `--color-accent` value in `themes.css`, since the picker can't read another
 preset's CSS variables while that preset isn't the active one on `<html>`.
 
+## Icons
+Icons come from a self-hosted **Heroicons (outline, 24px) SVG sprite**, not
+an icon font (no Google Material Icons, no CDN) and not per-icon inline
+`<svg>` pastes.
+
+- **File:** `static/icons/sprite.svg` — a single static asset containing
+  all 324 Heroicons outline icons, each wrapped in `<symbol id="icon-name">`
+  under one root `<svg style="display:none">`. The root is intentionally
+  never rendered directly; individual icons are pulled out via `<use>`.
+- **Why a sprite instead of an icon font:** avoids the third-party
+  `fonts.googleapis.com` request (and the associated privacy/GDPR concern
+  of leaking visitor IPs to Google), avoids the FOUT of literal glyph names
+  flashing before the font loads, and avoids an icon-as-text accessibility
+  footgun. The full sprite is ~121KB raw / ~27KB gzipped, transferred once
+  and cached — smaller than a comparable Material Symbols font subset.
+- **Why a sprite instead of per-icon inline `<svg>` pastes:** path data
+  lives once in the sprite regardless of how many templates reference it;
+  repeated inline pastes duplicate the same path data in every template
+  that uses that icon. Inline pasting is still fine for a true one-off icon
+  used nowhere else — the sprite is for icons reused across templates.
+- **The sprite bundles the entire Heroicons outline set**, not just the
+  icons currently in use — this is deliberate so new icons never require a
+  rebuild step during development. If Heroicons ever needs to be updated to
+  a newer version, or the solid/mini variants are ever needed, regenerate
+  the sprite from `https://github.com/tailwindlabs/heroicons`
+  (`optimized/24/outline/*.svg`), concatenating each file's inner markup
+  into a `<symbol id="{filename}" viewBox="{original viewBox}">` block.
+
+### Usage
+```html
+{% load static %}
+<svg class="size-6 text-txt-secondary" aria-hidden="true">
+  <use href="{% static 'icons/sprite.svg' %}#moon"></use>
+</svg>
+```
+
+- Icon color/size follow the same theme-token utility classes as everything
+  else (`text-txt-secondary`, `text-accent`, etc.) — icons inherit
+  `currentColor`, so they respond to dark mode and preset changes
+  automatically, same as any other `currentColor`-based element in this
+  project (see `includes/logo.html`).
+- Icons carry no accessible label of their own. Always put `aria-hidden="true"`
+  on the icon's `<svg>`, and put the actual `aria-label` on the interactive
+  parent element (`<button>`, `<a>`) — mirrors the pattern already used by
+  the light/dark toggle in `navbar.html`.
+- Icon name = the Heroicons filename without `.svg` (e.g. `moon.svg` →
+  `#moon`, `check.svg` → `#check`).
+
 ## Tailwind commands
 The project includes a Makefile for Tailwind:
 
@@ -329,6 +377,10 @@ When making changes in this repo:
 - use theme token utility classes (`bg-bg`, `text-txt-primary`, `bg-accent`,
   etc.) for all color; never raw Tailwind palette classes or `dark:`
   variants (see "Theming system" above)
+- for icons, use `<use href="{% static 'icons/sprite.svg' %}#name">` against
+  the existing Heroicons sprite — never add an icon font/CDN (e.g. Google
+  Material Icons) and never inline-paste a full `<svg>` for an icon that's
+  reused across more than one template (see "Icons" above)
 
 This repository has moved from bare scaffolding into real domain modeling:
 the most important context is the `accounts` / `decks` / `pages` app split,
