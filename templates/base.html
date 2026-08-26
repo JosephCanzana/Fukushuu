@@ -7,10 +7,25 @@
 <title>{% block title %}Fukushuu{% endblock %}</title>
 <script>
     (function () {
-        var stored = localStorage.getItem('color-scheme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.documentElement.classList.toggle('dark', stored ? stored === 'dark' : prefersDark);
-    })();
+var stored = localStorage.getItem('color-scheme');
+var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+document.documentElement.classList.toggle('dark', stored ? stored === 'dark' : prefersDark);
+})();
+</script>
+
+<!-- Restores the visitor's saved color preset (see the "Change theme" modal
+   in landing.html) before any stylesheet loads, so there's no flash of
+   theme-neutral on refresh — same reasoning as the dark-mode script above.
+   Keep this hardcoded preset id list in sync with the `presets` array in
+   landing.html's theme modal. -->
+<script>
+    (function () {
+var stored = localStorage.getItem('theme-preset');
+if (stored) {
+    document.documentElement.classList.remove('theme-neutral', 'theme-slate', 'theme-forest');
+    document.documentElement.classList.add('theme-' + stored);
+}
+})();
 </script>
 
 <link rel="stylesheet" href="{% static 'css/output.css' %}">

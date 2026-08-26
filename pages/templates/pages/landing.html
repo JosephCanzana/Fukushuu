@@ -1,4 +1,5 @@
 {% extends "base_public.html" %}
+{% load static %}
 
 {% block title %}Fukushuu — review that sticks{% endblock %}
 
@@ -26,19 +27,45 @@
             </p>
             <div class="mt-10 flex flex-wrap items-center gap-4">
                 <a href="{% url 'accounts:landing' %}"
-                   class="px-5 py-2.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
-                    Start reviewing
+                   class="px-6 py-3 text-sm font-semibold rounded-md bg-accent text-white hover:bg-accent-hover shadow-sm">
+                    Start reviewing — it's free
                 </a>
                 <a href="#why"
-                   class="px-5 py-2.5 text-sm font-medium rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                   class="px-6 py-3 text-sm font-medium rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
                     Why it works
                 </a>
             </div>
+
+            <!-- Quick trust strip — reinforces the CTA with concrete, scannable
+               reasons to click rather than another paragraph of copy. -->
+            <dl class="mt-10 flex flex-wrap gap-x-8 gap-y-3 font-mono text-xs text-txt-muted">
+                <div class="flex items-center gap-1.5">
+                    <svg class="size-4 text-accent" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#check"></use>
+                    </svg>
+                    <span>No credit card</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <svg class="size-4 text-accent" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#check"></use>
+                    </svg>
+                    <span>SM-2 backed scheduling</span>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <svg class="size-4 text-accent" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#check"></use>
+                    </svg>
+                    <span>Unlimited decks</span>
+                </div>
+            </dl>
+
+            <!-- Change theme — extracted to includes/theme-switcher.html -->
+            <div class="mt-8">
+                {% include "includes/theme-switcher.html" %}
+            </div>
         </div>
 
-        <!-- A real, tappable flashcard — the actual product, not a mockup of it.
-           Grading it plays out the exact idea the "why it helps" section
-           explains below: better grades push the next review further out. -->
+        <!-- A real, tappable flashcard  -->
         <div x-data="{ flipped: false, next: null }"
              class="[perspective:1000px] w-full max-w-xs mx-auto md:mx-0 md:ml-auto">
             <div class="relative h-56 transition-transform duration-500 [transform-style:preserve-3d] cursor-pointer"
@@ -46,26 +73,30 @@
                  @click="flipped = !flipped">
                 <div class="absolute inset-0 [backface-visibility:hidden] rounded-2xl border border-border bg-surface shadow-sm flex flex-col items-center justify-center gap-2 p-6">
                     <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted">card &middot; front</p>
-                    <p class="font-main text-4xl font-semibold text-txt-primary">&#29356;</p>
+                    <p class="font-main text-4xl font-semibold text-txt-primary">&#29483;</p>
                     <p class="text-xs text-txt-muted mt-2">tap to flip</p>
                 </div>
                 <div class="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl border border-border bg-surface-alt flex flex-col items-center justify-center gap-1 p-6">
                     <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted">card &middot; back</p>
-                    <p class="font-main text-2xl font-semibold text-txt-primary">dog</p>
-                    <p class="text-xs text-txt-secondary">inu</p>
+                    <p class="font-main text-2xl font-semibold text-txt-primary">cat</p>
+                    <p class="text-xs text-txt-secondary">neko</p>
                 </div>
             </div>
 
-            <div class="mt-4 grid grid-cols-3 gap-2" x-show="flipped" x-cloak>
-                <button type="button" @click="next = 'tomorrow'; flipped = false"
+            <div class="mt-4 grid grid-cols-4 gap-2" x-show="flipped" x-cloak>
+                <button type="button" @click="next = '1 minute'; flipped = false"
                         class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
                     Again
                 </button>
-                <button type="button" @click="next = 'in 6 days'; flipped = false"
+                <button type="button" @click="next = '5 min'; flipped = false"
+                        class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
+                    Hard
+                </button>
+                <button type="button" @click="next = '10 min'; flipped = false"
                         class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
                     Good
                 </button>
-                <button type="button" @click="next = 'in 13 days'; flipped = false"
+                <button type="button" @click="next = '1 day'; flipped = false"
                         class="px-2 py-1.5 rounded-md border border-border text-xs font-medium text-txt-secondary hover:bg-surface-alt">
                     Easy
                 </button>
@@ -178,24 +209,63 @@
     </div>
 </section>
 
-<!-- Under the hood -->
-<section class="py-20 border-t border-border">
-    <p class="font-mono text-xs tracking-widest uppercase text-txt-muted mb-3">under the hood</p>
-    <h2 class="font-main font-semibold text-3xl text-txt-primary tracking-tight mb-8">
-        Built with
-    </h2>
-    <div class="flex flex-wrap gap-3 font-mono text-sm">
-        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Django</span>
-        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">PostgreSQL</span>
-        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Tailwind CSS</span>
-        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Alpine.js</span>
-        <span class="px-3 py-1.5 rounded-md border border-border bg-surface-alt text-txt-secondary">Docker</span>
-    </div>
-</section>
+<!-- Footer -->
+<footer class="border-t border-border">
+    <div class="py-14 grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.3fr_0.9fr_0.9fr_1fr]">
+        <div>
+            {% include "includes/logo.html" %}
+            <p class="mt-4 text-sm text-txt-secondary max-w-xs leading-relaxed">
+                Spaced repetition, done right. Review less, remember more.
+            </p>
+            <a href="{% url 'accounts:landing' %}"
+               class="mt-5 inline-block px-4 py-2 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
+                Start reviewing
+            </a>
+        </div>
 
-<footer class="py-10 border-t border-border flex items-center justify-between text-txt-muted">
-    {% include "includes/logo.html" %}
-    <span class="font-mono text-xs">&copy; {% now "Y" %} Fukushuu</span>
+        <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted mb-4">Product</p>
+            <ul class="space-y-2.5 text-sm text-txt-secondary">
+                <li><a href="{% url 'pages:landing' %}#about" class="hover:text-txt-primary">About</a></li>
+                <li><a href="{% url 'pages:landing' %}#why" class="hover:text-txt-primary">Why it works</a></li>
+                {# placeholder — swap for {% url %} once accounts routes are named #}
+                <li><a href="#" class="hover:text-txt-primary">Log in</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted mb-4">Legal</p>
+            <ul class="space-y-2.5 text-sm text-txt-secondary">
+                {# placeholder hrefs — swap once pages:privacy / pages:terms exist #}
+                <li><a href="#" class="hover:text-txt-primary">Privacy policy</a></li>
+                <li><a href="#" class="hover:text-txt-primary">Terms of service</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-txt-muted mb-4">Contact</p>
+            <ul class="space-y-2.5 text-sm text-txt-secondary">
+                {# placeholder contact details — swap for real values before launch #}
+                <li class="flex items-center gap-2">
+                    <svg class="size-4 text-txt-muted shrink-0" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#envelope"></use>
+                    </svg>
+                    <a href="mailto:hello@fukushuu.app" class="hover:text-txt-primary">hello@fukushuu.app</a>
+                </li>
+                <li class="flex items-center gap-2">
+                    <svg class="size-4 text-txt-muted shrink-0" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#phone"></use>
+                    </svg>
+                    <a href="tel:+10000000000" class="hover:text-txt-primary">+1 (000) 000-0000</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="py-6 border-t border-border flex flex-wrap items-center justify-between gap-2 text-txt-muted">
+        <span class="font-mono text-xs">&copy; {% now "Y" %} Fukushuu</span>
+        <span class="font-mono text-xs">Made for people who forget on purpose, not on accident.</span>
+    </div>
 </footer>
 
 {% endblock %}

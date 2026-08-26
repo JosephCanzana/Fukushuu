@@ -179,17 +179,19 @@ Tailwind's built-in `dark:` variant. Two files split the responsibility:
   `@font-face` doesn't generate the utility class on its own.
 - `static/css/themes.css` — override blocks for every state that differs
   from the default: `.theme-neutral.dark`, `.theme-slate`,
-  `.theme-slate.dark`. `theme-neutral` (light) needs no block since it's
-  already the default in `theme-tokens.css`.
+  `.theme-slate.dark`, `.theme-forest`, and `.theme-forest.dark`.
+  `theme-neutral` (light) needs no block since it's already the default in
+  `theme-tokens.css`.
 
-Two presets (`neutral`, `slate`) × two modes (light, dark) = 4 rendered
-combinations, expressed as 1 default + 3 override blocks. Adding a new
-preset means adding its light block (if it isn't the default) and its dark
-block to `themes.css`, plus a `theme-<name>` class option.
+Three presets (`neutral`, `slate`, `forest`) × two modes (light, dark) = 6
+rendered combinations, expressed as 1 default + 5 override blocks. Adding a
+new preset means adding its light block (if it isn't the default) and its
+dark block to `themes.css`, plus an entry in the switcher's `presets` array
+and a `theme-<name>` class option in `base.html`'s restore script.
 
-`<html>` carries both a preset class (`theme-neutral` / `theme-slate`,
-currently hardcoded to `theme-neutral` in `base.html` since the preset
-picker doesn't exist yet) and, independently, an optional `dark` class.
+`<html>` carries both a preset class (`theme-neutral`, `theme-slate`, or
+`theme-forest`, initially hardcoded to `theme-neutral`) and, independently,
+an optional `dark` class.
 These two are deliberately decoupled — a user's light/dark preference and
 their color preset are separate choices with separate scopes:
 
@@ -197,10 +199,10 @@ their color preset are separate choices with separate scopes:
   inline synchronous script in `base.html`'s `<head>` (before any
   stylesheet, to avoid a flash of the wrong mode). No login required, works
   on public pages.
-- **Preset** is meant to be an account-level choice once built (planned:
-  `accounts.Setting`, following the same field the `theme` column already
-  reserves), so it should follow a logged-in user across devices rather
-  than living in `localStorage`.
+- **Preset** is currently a public-page UI preference stored in
+  `localStorage` as `theme-preset`. It is meant to become an account-level
+  choice once built (using `accounts.Setting.theme`), so it can follow a
+  logged-in user across devices rather than living in `localStorage`.
 
 When building new pages/components: use the token utilities (`bg-bg`,
 `bg-surface`, `text-txt-primary`, `text-txt-secondary`, `border-border`,
@@ -208,17 +210,14 @@ When building new pages/components: use the token utilities (`bg-bg`,
 palette color or reach for `dark:` variants, since neither responds to the
 `.dark` class this project actually toggles.
 
-A temporary preset picker lives in `navbar.html` for manual testing
-(clearly marked `TEMPORARY` in a comment above it, not persisted anywhere)
-— remove it once the real settings-page picker exists. It's built as a
-dropdown list (Alpine `x-data`, an `open` flag, a `presets` array), not a
-button that cycles between two hardcoded values, specifically so that
-adding a third preset later is a one-line addition to `presets` —
-`{ id, label, accent }` — rather than a rewrite of the click handler. The
-`accent` field is a hardcoded hex used only for that preset's swatch dot in
-the picker UI; it must be kept in sync by hand with that preset's
-`--color-accent` value in `themes.css`, since the picker can't read another
-preset's CSS variables while that preset isn't the active one on `<html>`.
+The reusable `templates/includes/theme-switcher.html` component provides the
+preset picker. It is included on the landing page and can also be included
+in compact mode for tight layouts. Its Alpine state is local to each
+instance, so multiple switchers can coexist without sharing `open` or
+`preset`. It uses a dropdown grid with a `presets` array of `{ id, label,
+accent }` objects rather than a button that cycles through hardcoded values.
+The `accent` field is a hardcoded hex used only for that preset's swatch and
+must stay synchronized with `--color-accent` in `themes.css`.
 
 ## Icons
 Icons come from a self-hosted **Heroicons (outline, 24px) SVG sprite**, not
@@ -394,7 +393,9 @@ A base/layout template structure now exists under `templates/`:
 - `templates/base.html` — shared HTML shell only: static asset loading,
   `<title>` block, the self-hosted Alpine.js `<script>` tag, and a single
   `{% block base %}` that `base_public.html` / `base_app.html` override.
-  Contains no navigation or page-specific markup.
+  Contains no navigation or page-specific markup. Its head runs synchronous
+  inline scripts before the stylesheets to restore the saved light/dark mode
+  and color preset without a flash of the wrong theme.
 - `templates/base_public.html` — layout for logged-out/public pages.
   Extends `base.html`, includes `includes/navbar.html` (top nav bar), and
   exposes `{% block body %}` for page content.
@@ -403,8 +404,11 @@ A base/layout template structure now exists under `templates/`:
   a top navbar), and exposes `{% block body %}` for page content.
 - `templates/includes/navbar.html` — public navbar partial: brand link
   (wrapping `includes/logo.html`), Log in / Sign up links, a working
-  light/dark toggle (persists to `localStorage`), and the temporary preset
-  picker described under "Theming system" above.
+  light/dark toggle (persists to `localStorage`). Preset selection is
+  provided separately by `includes/theme-switcher.html`.
+- `templates/includes/theme-switcher.html` — reusable Alpine preset picker
+  with full and compact button variants. It owns its own modal state and
+  persists the selected preset to `localStorage`.
 - `templates/includes/sidebar.html` — app sidebar partial: brand link, nav
   links (Dashboard, Decks, Review, Settings), and a disabled dark-mode
   toggle placeholder.
@@ -424,12 +428,13 @@ persists to `localStorage`); `sidebar.html`'s is still an inert placeholder
 (`disabled`, no Alpine wiring) — behavior hasn't been ported over there yet.
 
 When building new pages: extend `base_public.html` for logged-out/marketing
-pages (e.g. `pages.LandingPage` — see `templates/landing.html` for a
-built-out example that leans on the token system, `includes/logo.html`,
-and Alpine for a small interactive demo) and `base_app.html` for
-authenticated pages (deck/card CRUD, review flow). Add new nav entries to
-the relevant partial in `templates/includes/`, not inline in the layout
-templates, so navigation stays centralized and easy to update.
+pages (e.g. `pages.LandingPage` — see
+`pages/templates/pages/landing.html` for a built-out example that leans on
+the token system, `includes/logo.html`, `includes/theme-switcher.html`, and
+Alpine for a small interactive demo) and `base_app.html` for authenticated
+pages (deck/card CRUD, review flow). Add new nav entries to the relevant
+partial in `templates/includes/`, not inline in the layout templates, so
+navigation stays centralized and easy to update.
 
 ### Template comment placement
 `{# ... #}` Django template comments should only appear at the top of a

@@ -1,0 +1,106 @@
+{% load static %}
+{# Reusable "Change theme" control — toggle button + modal grid of presets. #}
+{# Self-contained: all state lives in this component's own x-data, so it's #}
+{# safe to {% include %} more than once on the same page (e.g. once in the #}
+{# public navbar, once in the app sidebar) without the two copies fighting #}
+{# over shared state. #}
+{# #}
+{# Usage: #}
+{#   {% include "includes/theme-switcher.html" %} #}
+{#   {% include "includes/theme-switcher.html" with compact=True %}  (icon-only, no "Change theme" label — for tight spots like a sidebar rail) #}
+{# #}
+{# Keep the `presets` array below in sync with the hardcoded preset id list #}
+{# in base.html's restore script (<head>), which is what actually prevents #}
+{# the flash-of-neutral on refresh — this component just seeds its initial #}
+{# `preset` from whatever class that script already applied. #}
+<div x-data="{
+        open: false,
+        presets: [
+            { id: 'neutral', label: 'Neutral', accent: '#3B82F6' },
+            { id: 'slate',   label: 'Nova',    accent: '#6366F1' },
+            { id: 'forest',  label: 'Macha',   accent: '#65A30D' },
+        ],
+        preset: (Array.from(document.documentElement.classList)
+                    .find(c => c.startsWith('theme-')) || 'theme-neutral')
+                    .replace('theme-', ''),
+        current() {
+            return this.presets.find(p => p.id === this.preset) || this.presets[0];
+        },
+        select(id) {
+            this.preset = id;
+            document.documentElement.classList.remove(...this.presets.map(p => 'theme-' + p.id));
+            document.documentElement.classList.add('theme-' + id);
+            localStorage.setItem('theme-preset', id);
+            this.open = false;
+        }
+     }"
+     @keydown.escape.window="open = false">
+    {% if compact %}
+    <button type="button"
+            @click="open = true"
+            :aria-label="`Change theme. Current: ${current().label}`"
+            class="w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+        <span class="w-4 h-4 rounded-full border border-border-strong shrink-0"
+              :style="`background-color: ${current().accent}`"
+              aria-hidden="true"></span>
+    </button>
+    {% else %}
+    <button type="button"
+            @click="open = true"
+            :aria-label="`Change theme. Current: ${current().label}`"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-md border border-border text-sm font-medium text-txt-secondary hover:bg-surface-alt">
+        <span class="w-3.5 h-3.5 rounded-full border border-border-strong shrink-0"
+              :style="`background-color: ${current().accent}`"
+              aria-hidden="true"></span>
+        Change theme
+    </button>
+    {% endif %}
+
+    <!-- Modal — backdrop click or Escape closes it; clicking inside the
+       panel doesn't (@click.stop). -->
+    <div x-show="open"
+         x-cloak
+         x-transition.opacity
+         @click="open = false"
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Choose a color theme">
+        <div @click.stop
+             x-show="open"
+             x-transition
+             class="w-full max-w-sm rounded-2xl border border-border bg-surface p-5 shadow-lg">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-main font-semibold text-txt-primary">Change theme</h3>
+                <button type="button"
+                        @click="open = false"
+                        aria-label="Close"
+                        class="w-8 h-8 flex items-center justify-center rounded-md text-txt-secondary hover:bg-surface-alt">
+                    <svg class="size-5" aria-hidden="true">
+                        <use href="{% static 'icons/sprite.svg' %}#x-mark"></use>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Grid + scroll cap: stays tidy at 3 presets today and doesn't
+               need a redesign if that grows to 10+. -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-72 overflow-y-auto"
+                 role="listbox"
+                 aria-label="Color themes">
+                <template x-for="p in presets" :key="p.id">
+                    <button type="button"
+                            @click="select(p.id)"
+                            role="option"
+                            :aria-selected="preset === p.id"
+                            :class="preset === p.id ? 'border-accent bg-accent-soft' : 'border-border hover:bg-surface-alt'"
+                            class="flex flex-col items-center gap-2 px-3 py-3 rounded-lg border transition-colors">
+                        <span class="w-6 h-6 rounded-full border border-border-strong"
+                              :style="`background-color: ${p.accent}`"
+                              aria-hidden="true"></span>
+                        <span class="text-xs font-medium text-txt-secondary" x-text="p.label"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>

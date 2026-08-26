@@ -1,31 +1,62 @@
 {% load static %}
 {# Public-facing top navigation bar. Included by base_public.html. #}
-{# TODO: swap the '#' hrefs for {% url %} tags once accounts/pages routes are named. #}
-<nav class="border-b sticky top-0 z-100 border-border bg-surface">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-        <a href="#" class="hover:opacity-80 text-txt-primary">
-            {% include "includes/logo.html" %}
-        </a>
+{# TODO: swap the remaining '#' hrefs for {% url %} tags once accounts routes are named. #}
+<nav class="border-b sticky top-0 z-100 border-border bg-surface"
+     x-data="{ mobileOpen: false }">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+
+            <!-- Hamburger toggle — mobile only, opens the panel below. -->
+            <button type="button"
+                    @click="mobileOpen = !mobileOpen"
+                    :aria-expanded="mobileOpen"
+                    aria-label="Toggle navigation menu"
+                    aria-haspopup="true"
+                    class="md:hidden ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                <svg x-show="!mobileOpen" aria-hidden="true" class="size-5">
+                    <use href="{% static 'icons/sprite.svg' %}#bars-3"></use>
+                </svg>
+                <svg x-show="mobileOpen" x-cloak aria-hidden="true" class="size-5">
+                    <use href="{% static 'icons/sprite.svg' %}#x-mark"></use>
+                </svg>
+            </button>
+            <a href="{% url 'pages:landing' %}" class="hover:opacity-80 text-txt-primary shrink-0">
+                {% include "includes/logo.html" %}
+            </a>
+        </div>
+
+        <!-- Primary links — visible md+, collapse into the hamburger panel below md. -->
+        <div class="hidden md:flex items-center gap-1 text-base font-medium">
+            <a href="{% url 'pages:landing' %}"
+               class="px-3 py-1.5 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                Home
+            </a>
+            <a href="{% url 'pages:landing' %}#about"
+               class="px-3 py-1.5 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                About
+            </a>
+            <a href="{% url 'pages:landing' %}#why"
+               class="px-3 py-1.5 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                Why it works
+            </a>
+        </div>
 
         <div class="flex items-center gap-2">
             <a href="#"
-               class="px-3 py-1.5 text-sm font-medium rounded-md text-txt-secondary hover:bg-surface-alt">
+               class=" px-3 py-1.5 text-base font-medium rounded-md text-txt-secondary hover:bg-surface-alt">
                 Log in
             </a>
             <a href="{% url 'accounts:landing' %}"
-               class="px-3 py-1.5 text-sm font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
+               class="px-3 py-1.5 text-base font-medium rounded-md bg-accent text-white hover:bg-accent-hover">
                 Sign up
             </a>
 
-            <!-- Light/dark toggle — independent of the theme preset (neutral/slate),
-               which is a separate, settings-page-controlled choice. Persists to
-               localStorage; base.html applies the stored value before first paint
-               to avoid a flash of the wrong mode. -->
+            <!-- Light/dark toggle -->
             <button type="button"
                     x-data="{ dark: document.documentElement.classList.contains('dark') }"
                     @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('color-scheme', dark ? 'dark' : 'light')"
                     :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
-                    class="ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
+                    class="hidden md:show ml-1 w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
                 <svg x-show="!dark" aria-hidden="true" class="size-5">
                     <use href="{% static 'icons/sprite.svg' %}#moon"></use>
                 </svg>
@@ -34,61 +65,39 @@
                 </svg>
             </button>
 
-            <!-- TEMPORARY — preset picker for trying out color presets before the
-               real settings-page picker exists. Not persisted anywhere. A list
-               instead of a toggle: adding a future preset is one more entry in
-               `presets` below, no extra branching or markup. -->
-            <div x-data="{
-                    open: false,
-                    presets: [
-                        { id: 'neutral', label: 'Neutral', accent: '#3B82F6' },
-                        { id: 'slate',   label: 'Nova',   accent: '#6366F1' },
-                        { id: 'forest',   label: 'Macha',   accent: '#65A30D' },
-                    ],
-                    preset: document.documentElement.classList.contains('theme-slate') ? 'slate' : 'neutral',
-                    select(id) {
-                        this.preset = id;
-                        document.documentElement.classList.remove(...this.presets.map(p => 'theme-' + p.id));
-                        document.documentElement.classList.add('theme-' + id);
-                        this.open = false;
-                    }
-                 }"
-                 @click.outside="open = false"
-                 @keydown.escape="open = false"
-                 class="relative ml-1">
-                <button type="button"
-                        @click="open = !open"
-                        :aria-expanded="open"
-                        :aria-label="`Color preset: ${presets.find(p => p.id === preset).label}. Click to change.`"
-                        aria-haspopup="listbox"
-                        class="w-9 h-9 flex items-center justify-center rounded-md text-txt-secondary border border-border hover:bg-surface-alt">
-                    <span class="w-3 h-3 rounded-full border border-border-strong"
-                          :style="`background-color: ${presets.find(p => p.id === preset).accent}`"
-                          aria-hidden="true"></span>
-                </button>
+        </div>
+    </div>
 
-                <ul x-show="open"
-                    x-cloak
-                    x-transition.origin.top.right
-                    role="listbox"
-                    class="absolute right-0 mt-2 w-36 py-1 rounded-md border border-border bg-surface shadow-lg z-10">
-                    <template x-for="p in presets" :key="p.id">
-                        <li role="option"
-                            :aria-selected="preset === p.id"
-                            @click="select(p.id)"
-                            :class="preset === p.id ? 'text-txt-primary' : 'text-txt-secondary'"
-                            class="flex items-center gap-2 px-3 py-1.5 text-sm cursor-pointer hover:bg-surface-alt">
-                            <span class="w-2.5 h-2.5 rounded-full border border-border-strong"
-                                  :style="`background-color: ${p.accent}`"
-                                  aria-hidden="true"></span>
-                            <span x-text="p.label"></span>
-                            <svg x-show="preset === p.id" x-cloak aria-hidden="true" class="ml-auto size-4 text-accent">
-                                <use href="{% static 'icons/sprite.svg' %}#check"></use>
-                            </svg>
-                        </li>
-                    </template>
-                </ul>
-            </div>
+    <!-- Mobile nav panel — mirrors the md+ links above plus the items hidden
+       at that breakpoint (Log in). Closes itself on link tap. -->
+    <div x-show="mobileOpen"
+         x-cloak
+         x-transition
+         class="md:hidden border-t border-border bg-surface">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col gap-1 text-base font-medium">
+            <a href="{% url 'pages:landing' %}"
+               @click="mobileOpen = false"
+               class="px-3 py-2 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                Home
+            </a>
+            <a href="{% url 'pages:landing' %}#about"
+               @click="mobileOpen = false"
+               class="px-3 py-2 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                About
+            </a>
+            <a href="{% url 'pages:landing' %}#why"
+               @click="mobileOpen = false"
+               class="px-3 py-2 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary">
+                Why it works
+            </a>
+            <button type="button"
+                    x-data="{ dark: document.documentElement.classList.contains('dark') }"
+                    @click="dark = !dark; document.documentElement.classList.toggle('dark', dark); localStorage.setItem('color-scheme', dark ? 'dark' : 'light')"
+                    :aria-label="dark ? 'Switch to light mode' : 'Switch to dark mode'"
+                    class="flex items-center gap-3 px-3 py-2 rounded-md text-txt-secondary hover:bg-surface-alt hover:text-txt-primary text-left">
+              
+                <span x-text="dark ? 'Light mode' : 'Dark mode'"></span>
+            </button>
         </div>
     </div>
 </nav>
