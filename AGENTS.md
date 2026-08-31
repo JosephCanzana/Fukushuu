@@ -26,7 +26,12 @@ minimal or absent, and no models are yet registered in any `admin.py`.
   - `asgi.py`, `wsgi.py` — ASGI/WSGI app bootstraps
 - `accounts/` — custom user identity and preferences
   - `models.py` — `User` (extends `AbstractUser`), `Setting`
-  - `views.py`, `urls.py` — auth-related routes (currently stubs)
+  - `forms.py` — `SignUpForm` (plain `forms.Form`, not `ModelForm`, since it
+    carries a `password_confirmation` field with no corresponding column on
+    `User`)
+  - `views.py`, `urls.py` — `sign_up` is implemented (renders the form on
+    GET, validates + creates the user on POST); other auth routes (login,
+    logout) are still stubs
 - `decks/` — the core flashcard domain
   - `models.py` — `Tag`, `Deck`, `Card`
   - `views.py`, `urls.py` — deck/card CRUD and review routes (currently stubs)
@@ -129,6 +134,16 @@ lifecycle overlap with an existing app's models.
   wherever suspension needs to be enforced.
 - `Setting` — `OneToOneField` to `User` (not a plain `ForeignKey` — one
   settings row per user, enforced at the DB level). Currently just `theme`.
+- `SignUpForm` (`forms.py`) — validates `username`, `email`, `password`,
+  `password_confirmation`. Duplicate `username`/`email` checks live in
+  `clean_username`/`clean_email` (each does a `User.objects.filter(...).exists()`
+  lookup and raises `ValidationError`, which Django auto-attaches to that
+  field). Password strength is a regex in `clean_password` (8+ chars,
+  upper/lower/digit/special). The password-match check lives in the
+  whole-form `clean()` instead, since it needs both password fields at once,
+  and uses `self.add_error("password_confirmation", ...)` to target the
+  right field. The view creates the user with `User.objects.create_user(...)`,
+  never `.create()`, so the password is hashed.
 
 ### `decks`
 - `Tag` — per-user label, `unique_together`/`UniqueConstraint` on
@@ -318,7 +333,10 @@ includes:
 2. implementing the SM-2 review logic as a method on `Card`
    (e.g. `apply_review(quality)`), not as a standalone utility function
 3. building out real views/templates for `accounts` (auth) and `decks`
-   (deck/card CRUD, review flow) to replace current route stubs
+   (deck/card CRUD, review flow) to replace current route stubs — sign-up
+   (`accounts.SignUpForm` + `sign_up` view) is done; login/logout and
+   template-level error display (looping over `form.errors` in
+   `sign_up.html`) are still open
 4. building the file-to-flashcard generation flow from uploaded files or text input
 
 ## Quick reference

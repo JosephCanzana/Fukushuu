@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from .forms import SignUpForm
+from accounts.models import User
 
 # Create your views here.
 def landing(request):
@@ -7,12 +9,20 @@ def landing(request):
 
 
 def sign_up(request):
-    if request == "POST":
-        # Here you can print the request data to check if it's being submitted correctly
-        print(request.POST)
-        
-        # You can also return a simple HTTP response with a success message
-        return HttpResponse('Form submitted successfully', status=200)
-
-    return render(request, "accounts/sign_up.html")
+    if request.method == "POST":
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data["username"]
+            email = form.cleaned_data["email"]
+            password = form.cleaned_data["password"]
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password
+            )
+            return HttpResponse(f"Account created for {user.username}")
+        else:
+            return render(request, "accounts/sign_up.html", {"form": form})
+    else:
+        return render(request, "accounts/sign_up.html")
 
