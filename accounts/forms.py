@@ -1,5 +1,6 @@
 from django import forms
 from accounts.models import User
+from django.db.models import Q
 import re
 
 class SignUpForm(forms.Form):
@@ -38,6 +39,31 @@ class SignUpForm(forms.Form):
         password = self.cleaned_data.get("password")
         # The regex requirement:  minimum 8 length, small letter, big letter, special character, number
         if not password or not re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_])[A-Za-z\d@$!%*?&_]{8,}$", password):
-            raise forms.ValidationError("The password is not strong enough")
+            raise forms.ValidationError("The password is not strong enough.")
         return password
+
+class LoginForm(forms.Form):
+    # Identification is either email or username
+    identification = forms.CharField(max_length=150)
+    password = forms.CharField(widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        identification = cleaned_data.get("identification")
+        password = cleaned_data.get("password") 
+
+        # Get the user
+        try:
+            user = User.objects.get(Q(email=identification) | Q(username=identification))
+        except User.DoesNotExist:
+            raise forms.ValidationError("Invalid Credentials")
+        
+        if not user.check_password(password):
+            raise forms.ValidationError("Invalid Credentials")
+        
+        cleaned_data["user"] = user
+        
+        return cleaned_data
+
+
         

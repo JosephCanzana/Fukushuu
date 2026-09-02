@@ -108,11 +108,13 @@ shell (static assets, `<title>` block, Alpine.js):
   Includes `includes/sidebar.html`: brand link, nav links, and a dark-mode
   toggle placeholder.
 
-Nav links in both partials use `href="#"` for now — `accounts`/`decks` URL
-names aren't finalized yet. Add new nav entries to the relevant partial in
-`templates/includes/`, not inline in the layout templates, so navigation
-stays centralized. Dark/light mode toggles are inert placeholders; the
-behavior itself isn't implemented yet.
+Nav links use `href="#"` for now, **except** `navbar.html`'s "Log in" link,
+which is wired to `{% url 'accounts:login' %}` now that the route exists.
+`navbar.html`'s "Sign up" link and every `sidebar.html` link are still
+placeholders — `decks` URL names aren't finalized yet. Add new nav entries to
+the relevant partial in `templates/includes/`, not inline in the layout
+templates, so navigation stays centralized. Dark/light mode toggles are inert
+placeholders; the behavior itself isn't implemented yet.
 
 ## Verify Tailwind + Alpine are working
 

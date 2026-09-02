@@ -29,12 +29,18 @@ minimal or absent, and no models are yet registered in any `admin.py`.
   - `forms.py` — `SignUpForm` (plain `forms.Form`, not `ModelForm`, since it
     carries a `password_confirmation` field with no corresponding column on
     `User`)
-  - `views.py`, `urls.py` — `sign_up` is implemented (renders the form on
-    GET, validates + creates the user on POST); other auth routes (login,
-    logout) are still stubs
+  - `views.py`, `urls.py` — `sign_up` and `login` are implemented (each
+    renders its form on GET, validates on POST); `login` also calls
+    `auth.login(request, user)` on success. `logout` is still a stub.
+    **Temporary:** on success, `login` directly renders
+    `decks/dashboard.html` rather than redirecting to a `decks`-owned view —
+    revisit once `decks.views` has a real `dashboard` view to redirect to.
 - `decks/` — the core flashcard domain
   - `models.py` — `Tag`, `Deck`, `Card`
   - `views.py`, `urls.py` — deck/card CRUD and review routes (currently stubs)
+  - `templates/decks/dashboard.html` — placeholder post-login landing page
+    (extends `base_app.html`); not yet backed by its own view/URL — see the
+    `accounts.login` note above
 - `pages/` — admin-managed static content
   - `models.py` — `LandingPage` (singleton pattern via `save()` override)
 - `static/` — frontend static assets
@@ -144,6 +150,15 @@ lifecycle overlap with an existing app's models.
   and uses `self.add_error("password_confirmation", ...)` to target the
   right field. The view creates the user with `User.objects.create_user(...)`,
   never `.create()`, so the password is hashed.
+- `LoginForm` (`forms.py`) — accepts either `email` or `username` in a single
+  `identification` field. The whole-form `clean()` looks the user up with
+  `User.objects.get(Q(email=identification) | Q(username=identification))`
+  and then calls `user.check_password(...)`. Both the "no matching user" and
+  "wrong password" branches raise the same `"Invalid Credentials"` message
+  deliberately — a field-specific message would tell an attacker which part
+  they got wrong. On success, `clean()` stashes the resolved instance as
+  `cleaned_data["user"]` so the view can call `auth.login(request, user)`
+  without a second database lookup.
 
 ### `decks`
 - `Tag` — per-user label, `unique_together`/`UniqueConstraint` on
@@ -334,10 +349,14 @@ includes:
    (e.g. `apply_review(quality)`), not as a standalone utility function
 3. building out real views/templates for `accounts` (auth) and `decks`
    (deck/card CRUD, review flow) to replace current route stubs — sign-up
-   (`accounts.SignUpForm` + `sign_up` view) is done; login/logout and
-   template-level error display (looping over `form.errors` in
-   `sign_up.html`) are still open
-4. building the file-to-flashcard generation flow from uploaded files or text input
+   (`accounts.SignUpForm` + `sign_up` view) and login
+   (`accounts.LoginForm` + `login` view) are done; `logout` is still open.
+   Template-level error display is a deliberate deferral, not an oversight:
+   it's planned as a custom modal/error-type system rather than looping over
+   `form.errors` inline in `sign_up.html`/`login.html`
+4. giving `decks` a real `dashboard` view/URL so `accounts.login` can
+   `redirect()` to it instead of rendering `decks/dashboard.html` directly
+5. building the file-to-flashcard generation flow from uploaded files or text input
 
 ## Quick reference
 ```bash
@@ -439,8 +458,11 @@ A base/layout template structure now exists under `templates/`:
   its use in `navbar.html`).
 
 Navigation links in both partials currently use `href="#"` with `TODO`
-comments — `accounts` and `decks` URL names aren't finalized yet, so these
-need to be swapped for `{% url %}` tags once those routes are named.
+comments — `accounts` and `decks` URL names aren't finalized yet — **except**
+`navbar.html`'s "Log in" link, now wired to `{% url 'accounts:login' %}` now
+that the route exists. `navbar.html`'s "Sign up" link and every link in
+`sidebar.html` still need to be swapped from `href="#"` once their routes are
+named.
 `navbar.html`'s light/dark toggle is fully wired (Alpine `x-data`/`@click`,
 persists to `localStorage`); `sidebar.html`'s is still an inert placeholder
 (`disabled`, no Alpine wiring) — behavior hasn't been ported over there yet.

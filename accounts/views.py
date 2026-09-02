@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .forms import SignUpForm
+from django.contrib import auth
+from .forms import SignUpForm, LoginForm
 from accounts.models import User
 
 # Create your views here.
@@ -26,3 +27,15 @@ def sign_up(request):
     else:
         return render(request, "accounts/sign_up.html")
 
+def login(request):
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+
+        if form.is_valid():
+            auth.login(request, form.cleaned_data["user"])
+            return render(request, "decks/dashboard.html")
+        else:
+            return render(request, "accounts/login.html")
+        
+    else:
+        return render(request, "accounts/login.html")
